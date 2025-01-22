@@ -73,6 +73,15 @@ internal class CertificatesService
     public async Task<IEnumerable<CompetitiveModeCertificate>> GetCompetitiveCertificates(string userId, CancellationToken cancellationToken)
     {
         var now = _now.Get();
+        Console.WriteLine("Getting certs for user " + userId);
+
+        var matches = await _store
+            .WithNoTracking<Data.Player>()
+            .Where(p => p.UserId == userId && p.Game.GameEnd < now || p.Game.GameEnd == DateTimeOffset.MinValue)
+            .Where(p => p.Game.CertificateTemplateId != string.Empty && p.Game.CertificateTemplateId != null)
+            .Select(p => p.Id)
+            .ToArrayAsync(cancellationToken);
+        Console.WriteLine("players " + string.Join(',', matches));
 
         var eligiblePlayerTeams = await _store
             .WithNoTracking<Data.Player>()
