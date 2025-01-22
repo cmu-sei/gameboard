@@ -79,9 +79,10 @@ internal class CertificatesService
             .WithNoTracking<Data.Player>()
             .Where(p => p.UserId == userId && p.Game.GameEnd < now || p.Game.GameEnd == DateTimeOffset.MinValue)
             .Where(p => p.Game.CertificateTemplateId != string.Empty && p.Game.CertificateTemplateId != null)
-            .Select(p => p.Id)
+            .Where(p => p.Challenges.All(c => c.PlayerMode == PlayerMode.Competition))
+            .Select(p => new { p.Id, p.SessionEnd, AllCompetitive = p.Challenges.All(c => c.PlayerMode == PlayerMode.Competition), AnyCompetitive = p.Challenges.Any(c => c.PlayerMode == PlayerMode.Competition) })
             .ToArrayAsync(cancellationToken);
-        Console.WriteLine("players " + string.Join(',', matches));
+        Console.WriteLine("players " + string.Join(',', matches.Select(m => $"{m.Id} {m.SessionEnd} {m.AllCompetitive} {m.AnyCompetitive}")));
 
         var eligiblePlayerTeams = await _store
             .WithNoTracking<Data.Player>()
@@ -93,7 +94,7 @@ internal class CertificatesService
                     && p.Game.CertificateTemplateId != null
             )
             .WhereDateIsNotEmpty(p => p.SessionEnd)
-            .Where(p => p.Challenges.All(c => c.PlayerMode == PlayerMode.Competition))
+            .Where(p => p.Challenges.Any(c => c.PlayerMode == PlayerMode.Competition))
             .Select(p => new
             {
                 p.Id,
