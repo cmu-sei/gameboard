@@ -158,6 +158,14 @@ public class CertificatesServiceTests
             new()
             {
                 PartialCount = 0,
+                Challenges =
+                [
+                    new Data.Challenge
+                    {
+                        Id = fixture.Create<string>(),
+                        PlayerMode = PlayerMode.Competition
+                    }
+                ],
                 Game = new Data.Game
                 {
                     Id = gameId,
